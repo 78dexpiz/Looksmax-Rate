@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LOOKSCORE TERMINAL v4.0</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&display=swap');
+  :root{--red:#c0392b;--rdim:#7b1e14;--green:#00ff41;--bg:#080808;--sf:#0f0f0f;--wh:#f0f0f0;--tx:#d0d0d0;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--tx);font-family:'Share Tech Mono',monospace;min-height:100vh;overflow-x:hidden;cursor:crosshair;}
+  body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.15) 2px,rgba(0,0,0,.15) 4px);pointer-events:none;z-index:999;}
+  header{border-bottom:1px solid var(--red);padding:18px 40px;display:flex;align-items:center;justify-content:space-between;}
+  .logo{font-family:'Bebas Neue',sans-serif;font-size:2rem;color:var(--wh);letter-spacing:4px;}
+  .logo span{color:var(--red);}
+  .sb{font-size:.68rem;color:#444;text-align:right;line-height:1.7;}
+  .on{color:var(--green);}.er{color:var(--red);}
+  main{max-width:800px;margin:0 auto;padding:50px 20px;}
+  .intro{font-size:.73rem;color:#333;margin-bottom:36px;line-height:1.9;}
+  .cmd{color:var(--red);}
+  h2{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:3px;color:var(--wh);margin-bottom:18px;border-left:3px solid var(--red);padding-left:12px;}
+  .drop{border:1px solid #1e1e1e;border-top:1px solid var(--rdim);background:var(--sf);padding:55px 40px;text-align:center;position:relative;cursor:pointer;transition:border-color .1s;}
+  .drop:hover,.drop.drag{border-color:var(--red);}
+  .drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+  .di{font-size:2.8rem;color:#2a2a2a;margin-bottom:14px;display:block;}
+  .dl{font-size:.78rem;color:#444;line-height:2.1;}
+  .dl strong{color:var(--red);font-size:.95rem;letter-spacing:2px;}
+  .note{margin-top:26px;border:1px solid #1a1a1a;border-left:3px solid var(--red);padding:14px 18px;font-size:.7rem;color:#3a3a3a;line-height:1.9;}
+  .note strong{color:var(--red);}
+  #prev-sec{display:none;margin-top:36px;}
+  .cw{position:relative;width:100%;}
+  #ov{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;}
+  #img{width:100%;max-height:420px;object-fit:cover;object-position:top;display:block;filter:grayscale(15%) contrast(1.08);}
+  .cn{position:absolute;width:14px;height:14px;pointer-events:none;z-index:2;}
+  .cn.tl{top:7px;left:7px;border-top:2px solid var(--red);border-left:2px solid var(--red);}
+  .cn.tr{top:7px;right:7px;border-top:2px solid var(--red);border-right:2px solid var(--red);}
+  .cn.bl{bottom:7px;left:7px;border-bottom:2px solid var(--red);border-left:2px solid var(--red);}
+  .cn.br{bottom:7px;right:7px;border-bottom:2px solid var(--red);border-right:2px solid var(--red);}
+  #btn{margin-top:18px;width:100%;padding:16px;background:transparent;border:1px solid var(--red);color:var(--red);font-family:'Bebas Neue',sans-serif;font-size:1.35rem;letter-spacing:4px;cursor:pointer;transition:all .1s;}
+  #btn:hover{background:var(--red);color:#000;}
+  #load-sec{display:none;margin-top:36px;}
+  .tlog{font-size:.73rem;line-height:2.1;}
+  .ln{color:#444;margin-bottom:1px;}
+  .ln.r{color:var(--red);}.ln.w{color:#777;}.ln.g{color:var(--green);}.ln.d{color:#2a2a2a;}
+  .pb-w{margin-top:18px;height:2px;background:#111;}
+  .pb{height:100%;background:var(--red);width:0%;transition:width .3s;box-shadow:0 0 6px var(--red);}
+  #res-sec{display:none;margin-top:36px;}
+  .dh{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid #1e1e1e;padding-bottom:18px;margin-bottom:26px;}
+  .dt{font-size:.68rem;color:#2d2d2d;line-height:2.1;}
+  .dt strong{color:#4a4a4a;}
+  .sd{text-align:right;}
+  .sn{font-family:'Bebas Neue',sans-serif;font-size:5rem;line-height:1;}
+  .sn.lo{color:var(--red);}.sn.mi{color:#e67e22;}.sn.hi{color:#f1c40f;}.sn.tp{color:var(--green);}
+  .ss{font-size:1.8rem;color:#2a2a2a;font-family:'Bebas Neue',sans-serif;}
+  .tb{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:3px;padding:4px 10px;border:1px solid;display:inline-block;margin-top:6px;}
+  .mg{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#111;border:1px solid #111;margin-bottom:26px;}
+  .mc{background:var(--sf);padding:13px 15px;}
+  .ml{font-size:.62rem;color:#2d2d2d;text-transform:uppercase;letter-spacing:2px;margin-bottom:5px;}
+  .mv{font-size:.82rem;color:var(--wh);}
+  .mb{height:2px;background:#1a1a1a;margin-top:7px;}
+  .mf{height:100%;background:var(--red);transition:width 1s ease-out;}
+  .mf.gd{background:#f1c40f;}.mf.gt{background:var(--green);}
+  .vb{border:1px solid #1a1a1a;border-top:1px solid var(--red);padding:22px;margin-bottom:18px;background:var(--sf);}
+  .vb h3{font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:3px;color:var(--red);margin-bottom:14px;}
+  .vt{font-size:.76rem;line-height:2.1;color:#666;}
+  .vt strong{color:var(--wh);}
+  .ll{list-style:none;margin-top:14px;}
+  .ll li{font-size:.73rem;line-height:2.1;color:#444;padding-left:14px;position:relative;}
+  .ll li::before{content:'▸';position:absolute;left:0;color:var(--red);}
+  .ll li strong{color:#999;}
+  .pw{display:flex;align-items:center;gap:14px;margin-top:18px;}
+  .pl{font-size:.68rem;color:#2d2d2d;letter-spacing:2px;white-space:nowrap;}
+  .pb2{flex:1;height:3px;background:#111;}
+  .pf{height:100%;background:linear-gradient(90deg,var(--red),#f1c40f);transition:width 1.5s ease-out;}
+  .pn{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:var(--wh);white-space:nowrap;}
+  .rb{margin-top:26px;width:100%;padding:13px;background:transparent;border:1px solid #1e1e1e;color:#2d2d2d;font-family:'Share Tech Mono',monospace;font-size:.73rem;letter-spacing:2px;cursor:pointer;transition:all .2s;}
+  .rb:hover{border-color:#444;color:#666;}
+  .eb{display:none;border:1px solid var(--red);padding:18px;margin-top:18px;font-size:.73rem;color:var(--red);line-height:1.9;white-space:pre-line;}
+  footer{text-align:center;padding:36px;font-size:.62rem;color:#1a1a1a;border-top:1px solid #0d0d0d;letter-spacing:2px;margin-top:50px;}
+  .bk{animation:bk 1s step-end infinite;}
+  @keyframes bk{50%{opacity:0;}}
+  @media(max-width:580px){header{padding:14px 16px;}.logo{font-size:1.5rem;}main{padding:36px 14px;}.mg{grid-template-columns:1fr;}.sn{font-size:3.8rem;}.dh{flex-direction:column;gap:16px;}.sd{text-align:left;}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">LOOKS<span>SCORE</span> TERMINAL</div>
+  <div class="sb">VER 4.0 // MEDIAPIPE<br>STATUS: <span id="st" class="er">LOADING...</span><br><span id="ts"></span></div>
+</header>
+<main>
+  <div class="intro">
+    <span class="cmd">&gt;&gt;</span> ДВИЖОК: MediaPipe Face Mesh — 468 ТОЧЕК ЛИЦА.<br>
+    <span class="cmd">&gt;&gt;</span> ОДНО ФОТО = ОДИН ДЕТЕРМИНИРОВАННЫЙ РЕЙТ. НОЛЬ РАНДОМА.<br>
+    <span class="cmd">&gt;&gt;</span> ДОЖДИСЬ СТАТУСА <span class="on">ONLINE</span>.<span class="bk">_</span>
+  </div>
+
+  <div id="up-sec">
+    <h2>// ЗАГРУЗКА ОБРАЗЦА</h2>
+    <div class="drop" id="drop">
+      <input type="file" id="fi" accept="image/*">
+      <span class="di">◉</span>
+      <div class="dl" id="dl">
+        <strong id="dt">ОЖИДАНИЕ ДВИЖКА...</strong><br>
+        статус в правом верхнем углу<br><br>
+        <span style="color:#1e1e1e">JPG / PNG / WEBP</span>
+      </div>
+    </div>
+    <div class="note">
+      <strong>// ДВИЖОК:</strong> MediaPipe Face Mesh (Google) — 468 точек лица, работает в браузере.<br>
+      Симметрия, jawline, canthal tilt — чистая математика. Одно фото = один результат.
+    </div>
+  </div>
+
+  <div id="prev-sec">
+    <h2>// ОБРАЗЕЦ ПОЛУЧЕН</h2>
+    <div class="cw">
+      <img id="img" src="" alt="">
+      <canvas id="ov"></canvas>
+      <div class="cn tl"></div><div class="cn tr"></div>
+      <div class="cn bl"></div><div class="cn br"></div>
+    </div>
+    <div class="eb" id="eb"></div>
+    <button id="btn">▶ ЗАПУСТИТЬ АНАЛИЗ</button>
+  </div>
+
+  <div id="load-sec">
+    <h2>// АНАЛИЗ ЛИЦА...</h2>
+    <div class="tlog" id="tlog"></div>
+    <div class="pb-w"><div class="pb" id="pb"></div></div>
+  </div>
+
+  <div id="res-sec">
+    <h2>// ВЕРДИКТ ВЫНЕСЕН</h2>
+    <div class="dh">
+      <div class="dt">
+        <strong>ID:</strong> <span id="rid"></span><br>
+        <strong>ДАТА:</strong> <span id="rd"></span><br>
+        <strong>ДВИЖОК:</strong> MEDIAPIPE FACE MESH<br>
+        <strong>СТАТУС:</strong> <span style="color:var(--red)">CLASSIFIED</span>
+      </div>
+      <div class="sd">
+        <div><span class="sn" id="sn">0.0</span><span class="ss"> /10</span></div>
+        <div class="tb" id="tb"></div>
+      </div>
+    </div>
+    <div class="mg" id="mg"></div>
+    <div class="vb">
+      <h3>// ПРЯМОЙ ВЕРДИКТ</h3>
+      <div class="vt" id="vt"></div>
+    </div>
+    <div class="vb">
+      <h3>// LOOKSMAX ПРОТОКОЛ</h3>
+      <div class="vt">
+        <span style="color:#333">Приоритеты на основе слабых метрик:</span>
+        <ul class="ll" id="ll"></ul>
+      </div>
+      <div class="pw">
+        <div class="pl">LOOKSMAX<br>POTENTIAL</div>
+        <div class="pb2"><div class="pf" id="pf" style="width:0%"></div></div>
+        <div class="pn" id="pn">+0.0</div>
+      </div>
+    </div>
+    <button class="rb" id="rb">[ НОВЫЙ АНАЛИЗ ]</button>
+  </div>
+</main>
+<footer>LOOKSCORE TERMINAL // MEDIAPIPE ENGINE // COPE IS NOT AN OPTION</footer>
+
+<!-- MediaPipe via CDN - much more reliable than face-api.js -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const D=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+const M=(a,b)=>({x:(a.x+b.x)/2,y:(a.y+b.y)/2});
+
+// timestamp
+setInterval(()=>$('ts').textContent=new Date().toISOString().replace('T',' ').slice(0,19),1000);
+$('ts').textContent=new Date().toISOString().replace('T',' ').slice(0,19);
+
+let ready=false;
+let faceMesh=null;
+
+// ── Init MediaPipe Face Mesh ───────────────────────────────────────
+async function initMediaPipe(){
+  const st=$('st');
+  try{
+    faceMesh=new FaceMesh({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`});
+    faceMesh.setOptions({
+      maxNumFaces:1,
+      refineLandmarks:false,
+      minDetectionConfidence:0.3,
+      minTrackingConfidence:0.3,
+    });
+    faceMesh.onResults(onResults);
+    // warm up
+    await faceMesh.initialize();
+    ready=true;
+    st.textContent='ONLINE'; st.className='on';
+    $('dt').textContent='ПЕРЕТАЩИ ФОТО / НАЖМИ';
+    $('dl').innerHTML='<strong style="color:var(--red);font-size:.95rem;letter-spacing:2px">ПЕРЕТАЩИ ФОТО / НАЖМИ</strong><br>фронтальное фото, хорошее освещение<br>без фильтров и очков<br><br><span style="color:#1e1e1e">JPG / PNG / WEBP</span>';
+  }catch(e){
+    st.textContent='ERR: '+e.message.slice(0,30);
+    st.className='er';
+    console.error('MediaPipe init failed:',e);
+  }
+}
+
+// ── Result callback ───────────────────────────────────────────────
+let resolveDetection=null;
+function onResults(results){
+  if(resolveDetection){
+    resolveDetection(results);
+    resolveDetection=null;
+  }
+}
+
+// ── Detect face on image ──────────────────────────────────────────
+async function detectFace(imgEl){
+  return new Promise((resolve,reject)=>{
+    resolveDetection=resolve;
+    const timeout=setTimeout(()=>{
+      resolveDetection=null;
+      reject(new Error('Detection timeout'));
+    },20000);
+    faceMesh.send({image:imgEl}).catch(e=>{
+      clearTimeout(timeout);
+      resolveDetection=null;
+      reject(e);
+    }).then(()=>clearTimeout(timeout));
+  });
+}
+
+// ── MediaPipe landmark indices (468 point model) ──────────────────
+// Key landmarks:
+const LM={
+  // Jawline
+  jawLeft:234, jawRight:454, chin:152, jawMidLeft:172, jawMidRight:397,
+  // Eyes
+  leftEyeOuter:33, leftEyeInner:133, leftEyeTop:159, leftEyeBot:145,
+  rightEyeOuter:362, rightEyeInner:263, rightEyeTop:386, rightEyeBot:374,
+  // Nose
+  noseTip:1, noseLeft:129, noseRight:358, noseBridge:6,
+  // Brows
+  leftBrowOuter:70, leftBrowInner:107,
+  rightBrowOuter:300, rightBrowInner:336,
+  // Lips
+  lipTop:13, lipBot:14, lipLeft:61, lipRight:291,
+  lipUpperMid:12, lipLowerMid:15,
+  // Cheeks
+  cheekLeft:116, cheekRight:345,
+  // Forehead
+  foreheadTop:10,
+};
+
+function computeMetrics(lm){
+  // helper: get point by index, MediaPipe gives normalized coords 0-1
+  const p=i=>({x:lm[i].x,y:lm[i].y});
+
+  const faceW=D(p(LM.jawLeft),p(LM.jawRight));
+  const faceH=D(p(LM.foreheadTop),p(LM.chin));
+
+  // ── JAWLINE ──────────────────────────────────────────────────────
+  // How much does chin project below jaw midpoints?
+  const jawMid=M(p(LM.jawMidLeft),p(LM.jawMidRight));
+  const chinDrop=D(p(LM.chin),jawMid);
+  const jawW=D(p(LM.jawMidLeft),p(LM.jawMidRight));
+  const jaw=clamp(40+(chinDrop/jawW)*100-(jawW/faceW)*40,8,94);
+
+  // ── SYMMETRY ──────────────────────────────────────────────────────
+  const nb=p(LM.noseBridge);
+  const symPairs=[
+    [LM.leftEyeOuter,LM.rightEyeOuter],
+    [LM.leftEyeInner,LM.rightEyeInner],
+    [LM.leftBrowOuter,LM.rightBrowOuter],
+    [LM.leftBrowInner,LM.rightBrowInner],
+    [LM.noseLeft,LM.noseRight],
+    [LM.lipLeft,LM.lipRight],
+    [LM.jawLeft,LM.jawRight],
+    [LM.cheekLeft,LM.cheekRight],
+  ];
+  const asymAvg=symPairs.reduce((s,[l,r])=>s+Math.abs(D(p(l),nb)-D(p(r),nb))/faceW,0)/symPairs.length;
+  const sym=clamp(100-asymAvg*600,15,98);
+
+  // ── CANTHAL TILT ─────────────────────────────────────────────────
+  // Outer corner Y vs inner corner Y (MediaPipe Y: 0=top)
+  const lTilt=p(LM.leftEyeOuter).y-p(LM.leftEyeInner).y;
+  const rTilt=p(LM.rightEyeOuter).y-p(LM.rightEyeInner).y;
+  const eyeRefW=D(p(LM.leftEyeOuter),p(LM.leftEyeInner));
+  const tR=((lTilt+rTilt)/2)/eyeRefW;
+  // Negative tR = outer corner higher = positive canthal tilt (dominant)
+  let cLabel,cScore;
+  if(tR<-0.06){cLabel='POSITIVE';cScore=88;}
+  else if(tR<0.04){cLabel='NEUTRAL';cScore=58;}
+  else{cLabel='NEGATIVE';cScore=22;}
+
+  // ── CHEEKBONES ───────────────────────────────────────────────────
+  const cheekW=D(p(LM.cheekLeft),p(LM.cheekRight));
+  const chk=clamp((cheekW/jawW-0.95)*250+40,12,92);
+
+  // ── EYE REGION ───────────────────────────────────────────────────
+  const lEH=D(p(LM.leftEyeTop),p(LM.leftEyeBot));
+  const lEW=D(p(LM.leftEyeOuter),p(LM.leftEyeInner));
+  const rEH=D(p(LM.rightEyeTop),p(LM.rightEyeBot));
+  const rEW=D(p(LM.rightEyeOuter),p(LM.rightEyeInner));
+  const eR=(lEH/lEW+rEH/rEW)/2;
+  const eye=clamp(eR<0.25?78-(0.25-eR)*250:eR<0.35?80:108-eR*220,15,94);
+
+  // ── FACIAL THIRDS ────────────────────────────────────────────────
+  const bY=(p(LM.leftBrowInner).y+p(LM.rightBrowInner).y)/2;
+  const nY=p(LM.noseTip).y;
+  const cY=p(LM.chin).y;
+  const tY=p(LM.foreheadTop).y;
+  const t1=bY-tY,t2=nY-bY,t3=cY-nY,tot=t1+t2+t3,id=tot/3;
+  const thirds=clamp(100-(Math.abs(t1-id)+Math.abs(t2-id)+Math.abs(t3-id))/tot*300,18,96);
+
+  // ── NOSE ─────────────────────────────────────────────────────────
+  const noseW=D(p(LM.noseLeft),p(LM.noseRight));
+  const ieW=D(p(LM.leftEyeInner),p(LM.rightEyeInner));
+  const nose=clamp(100-Math.abs(noseW/ieW-1.0)*170,15,94);
+
+  // ── LIPS ─────────────────────────────────────────────────────────
+  const upH=D(p(LM.lipTop),p(LM.lipUpperMid));
+  const loH=D(p(LM.lipBot),p(LM.lipLowerMid));
+  const lips=clamp(100-Math.abs(upH/(loH+0.0001)-0.6)*240,15,92);
+
+  // ── WEIGHTED SCORE ───────────────────────────────────────────────
+  const w=jaw*0.21+sym*0.18+cScore*0.17+chk*0.14+eye*0.12+thirds*0.10+nose*0.05+lips*0.03;
+  const score=parseFloat(clamp(w*0.073+1.3,1.5,9.7).toFixed(1));
+
+  return{score,
+    metrics:{jawline:Math.round(jaw),symmetry:Math.round(sym),canthal_tilt:cLabel,
+      cheekbones:Math.round(chk),eye_region:Math.round(eye),facial_thirds:Math.round(thirds),
+      nose:Math.round(nose),lips:Math.round(lips)},
+    raw:{jaw,sym,cScore,chk,eye,thirds,nose,lips},
+    lm // pass through for drawing
+  };
+}
+
+// ── Upload handlers ───────────────────────────────────────────────
+const drop=$('drop');
+drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('drag');});
+drop.addEventListener('dragleave',()=>drop.classList.remove('drag'));
+drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('drag');const f=e.dataTransfer.files[0];if(f?.type.startsWith('image/'))handleFile(f);});
+$('fi').addEventListener('change',e=>{if(e.target.files[0])handleFile(e.target.files[0]);});
+
+function handleFile(file){
+  if(!ready){alert('Подожди — дождись статуса ONLINE.');return;}
+  const r=new FileReader();
+  r.onload=ev=>{
+    $('img').src=ev.target.result;
+    $('up-sec').style.display='none';
+    $('prev-sec').style.display='block';
+    $('eb').style.display='none';
+  };
+  r.readAsDataURL(file);
+}
+
+$('btn').addEventListener('click',async()=>{
+  $('prev-sec').style.display='none';
+  $('load-sec').style.display='block';
+  $('tlog').innerHTML='';
+  $('pb').style.width='0%';
+  await runAnalysis();
+});
+
+const log=(t,c='w')=>{const d=document.createElement('div');d.className='ln '+c;d.textContent=t;$('tlog').appendChild(d);};
+const setP=p=>$('pb').style.width=p+'%';
+
+// ── Main analysis ─────────────────────────────────────────────────
+async function runAnalysis(){
+  const imgEl=$('img');
+  if(!imgEl.complete||!imgEl.naturalWidth){
+    await new Promise(r=>{imgEl.onload=r;imgEl.onerror=r;});
+    await sleep(50);
+  }
+
+  log('> MEDIAPIPE FACE MESH АКТИВИРОВАН.','w'); setP(12); await sleep(60);
+  log('> ОТПРАВКА КАДРА В ДВИЖОК...','w'); setP(22);
+
+  let results;
+  try{
+    results=await detectFace(imgEl);
+  }catch(e){
+    return fail('Движок упал: '+e.message+'\nПопробуй перезагрузить страницу.');
+  }
+
+  if(!results.multiFaceLandmarks||results.multiFaceLandmarks.length===0){
+    return fail('Лицо не обнаружено.\n\nТребования:\n— чёткое фронтальное фото\n— лицо занимает >40% кадра\n— хорошее освещение, без теней\n— без очков и маски');
+  }
+
+  const lm=results.multiFaceLandmarks[0]; // 468 normalized landmarks
+  setP(50);
+  log(`> ЛИЦО НАЙДЕНО ✓  (${lm.length} ТОЧЕК).`,'g'); await sleep(60);
+
+  // Draw landmarks on canvas
+  const canvas=$('ov');
+  const imgDisp=$('img');
+  const W=imgDisp.clientWidth, H=imgDisp.clientHeight;
+  canvas.width=W; canvas.height=H;
+  const ctx=canvas.getContext('2d');
+
+  // key landmark dots
+  const KEY=[LM.jawLeft,LM.jawRight,LM.chin,LM.jawMidLeft,LM.jawMidRight,
+    LM.leftEyeOuter,LM.leftEyeInner,LM.rightEyeOuter,LM.rightEyeInner,
+    LM.leftBrowOuter,LM.leftBrowInner,LM.rightBrowOuter,LM.rightBrowInner,
+    LM.noseTip,LM.noseLeft,LM.noseRight,LM.noseBridge,
+    LM.lipLeft,LM.lipRight,LM.cheekLeft,LM.cheekRight];
+  ctx.fillStyle='rgba(192,57,43,0.85)';
+  KEY.forEach(i=>{const p=lm[i];ctx.beginPath();ctx.arc(p.x*W,p.y*H,2.5,0,Math.PI*2);ctx.fill();});
+
+  // jaw outline
+  const JAW=[234,93,132,58,172,136,149,148,152,377,378,365,397,288,361,323,454];
+  ctx.strokeStyle='rgba(192,57,43,0.5)';ctx.lineWidth=1.5;ctx.beginPath();
+  JAW.forEach((i,n)=>{const p=lm[i];n===0?ctx.moveTo(p.x*W,p.y*H):ctx.lineTo(p.x*W,p.y*H);});
+  ctx.stroke();
+
+  log('> ВЫЧИСЛЕНИЕ СИММЕТРИИ (8 пар точек)...','w'); setP(60); await sleep(60);
+  log('> АНАЛИЗ CANTHAL TILT...','w');   setP(68); await sleep(60);
+  log('> JAWLINE DEFINITION...','w');   setP(75); await sleep(60);
+  log('> CHEEKBONE RATIO...','w');      setP(81); await sleep(60);
+  log('> ПРОПОРЦИИ ЛИЦА (THIRDS)...','w'); setP(87); await sleep(60);
+  log('> КОМПИЛЯЦИЯ СЧЁТА...','w');    setP(94); await sleep(80);
+
+  const result=computeMetrics(lm);
+  const verdict=buildVerdict(result.score,result.metrics,result.raw);
+  const tips=buildTips(result.raw);
+
+  setP(100);
+  log('✓ АНАЛИЗ ЗАВЕРШЁН. ВЕРДИКТ ГОТОВ.','r');
+  await sleep(500);
+  $('load-sec').style.display='none';
+  renderResults(result,verdict,tips);
+}
+
+function fail(msg){
+  $('load-sec').style.display='none';
+  $('prev-sec').style.display='block';
+  $('eb').textContent='// ОШИБКА: '+msg;
+  $('eb').style.display='block';
+}
+
+// ── Verdict ───────────────────────────────────────────────────────
+function buildVerdict(score,m,raw){
+  const NM={jaw:'jawline',chk:'скулы',eye:'глазной регион',sym:'симметрия',thirds:'пропорции'};
+  const ranked=Object.entries({jaw:raw.jaw,chk:raw.chk,eye:raw.eye,sym:raw.sym,thirds:raw.thirds}).sort((a,b)=>a[1]-b[1]);
+  const wL=ranked.slice(0,2).map(([k])=>NM[k]);
+  const sL=NM[ranked[ranked.length-1][0]];
+  const ct={POSITIVE:'Canthal tilt положительный — взгляд доминирующий, hunter-тип.',NEUTRAL:'Canthal tilt нейтральный — взгляд не выделяется.',NEGATIVE:'Canthal tilt негативный — взгляд пассивный, prey-тип.'}[m.canthal_tilt];
+  if(score<4.5)return`Слабая костная база. Главные проблемы: <strong>${wL.join(' и ')}</strong>. ${ct} SMV в нижней зоне. Без looksmaxxing'а не изменится.`;
+  if(score<5.5)return`Ниже среднего. Плюс — <strong>${sL}</strong>. Минус — <strong>${wL.join(' и ')}</strong>. ${ct} Зона "невидимки" — не отталкиваешь, но и не привлекаешь.`;
+  if(score<6.5)return`Средний уровень SMV. <strong>${sL}</strong> — реальный плюс. Слабые: <strong>${wL.join(' и ')}</strong>. ${ct} Стартовая точка, не финал.`;
+  if(score<7.5)return`Выше среднего. <strong>${sL}</strong> работает на тебя. <strong>${wL[0]}</strong> тянет вниз. ${ct} Топ-25%. Тело и стиль добивают до элиты.`;
+  if(score<8.5)return`Сильная внешность. <strong>${sL}</strong> на высоком уровне. ${ct} Топ-10% по лицевым метрикам.`;
+  return`Элитная внешность. <strong>${sL}</strong> — уровень верхнего процента. ${ct} Максируй тело под уровень лица.`;
+}
+
+// ── Tips ──────────────────────────────────────────────────────────
+const TIPS={
+  jaw:['<strong>BODYFAT ↓</strong> — жир на лице убивает jawline. Сушка — первый приоритет.','<strong>MEWING</strong> — правильное положение языка формирует нёбо долгосрочно.','<strong>BEARD</strong> — борода закрывает слабый подбородок.','<strong>NECK/TRAPS</strong> — мощная шея делает jawline резче.'],
+  chk:['<strong>BODYFAT ↓</strong> — скулы появляются только при сушке.','<strong>ЗАГАР</strong> — выявляет рельеф скул.','<strong>MEWING</strong> — долгосрочно влияет на скуловую структуру.'],
+  eye:['<strong>БРОВИ</strong> — правильная форма усиливает орбитальный регион.','<strong>СОН 8ч+</strong> — убирает отёчность, взгляд острее.','<strong>BODYFAT ↓</strong> — жир вокруг глаз = prey-взгляд.'],
+  sym:['<strong>ЖЕВАНИЕ ДВУХ СТОРОН</strong> — равномерная нагрузка на мышцы.','<strong>СОН НА СПИНЕ</strong> — сон на боку деформирует лицо.','<strong>ОСАНКА</strong> — кривая осанка создаёт асимметрию.'],
+  thirds:['<strong>ORTHODONTICS</strong> — прикус смещает пропорции.','<strong>MEWING</strong> — влияет на средний третий долгосрочно.'],
+  nose:['<strong>РИНОПЛАСТИКА</strong> — единственный способ изменить нос.','<strong>ВИЗУАЛЬНЫЙ ПРИЁМ</strong> — брови и стрижка отвлекают от носа.'],
+  lips:['<strong>ГИДРАЦИЯ</strong> — обезвоженные губы выглядят тоньше.','<strong>BODYFAT ↓</strong> — высокий % жира размывает форму губ.'],
+};
+function buildTips(raw){
+  const order=Object.entries({jaw:raw.jaw,chk:raw.chk,eye:raw.eye,sym:raw.sym,thirds:raw.thirds,nose:raw.nose,lips:raw.lips}).sort((a,b)=>a[1]-b[1]);
+  const res=[],used=new Set();
+  for(const[k] of order)for(const t of(TIPS[k]||[]))if(!used.has(t)){used.add(t);res.push(t);if(res.length>=4)return res;break;}
+  return res;
+}
+
+const getTier=s=>s<4?{l:'СУБЧЕЛОВЕК',c:'#7b1e14'}:s<5?{l:'НИЖЕ СРЕДНЕГО',c:'#c0392b'}:s<6?{l:'СРЕДНЯЧОК',c:'#e67e22'}:s<7?{l:'ВЫШЕ СРЕДНЕГО',c:'#f1c40f'}:s<8?{l:'HIGH TIER',c:'#27ae60'}:s<9?{l:'CHAD',c:'#00ff41'}:{l:'GIGACHAD',c:'#00ff41'};
+
+// ── Render ────────────────────────────────────────────────────────
+function renderResults(result,verdict,tips){
+  $('res-sec').style.display='block';
+  const{score,metrics,raw}=result;
+  $('rid').textContent='LSC-'+(Math.round(score*1000)+metrics.symmetry*10+metrics.jawline);
+  $('rd').textContent=new Date().toISOString().slice(0,10);
+  const sEl=$('sn');
+  sEl.textContent=score.toFixed(1);
+  sEl.className='sn '+(score<5?'lo':score<6.5?'mi':score<8?'hi':'tp');
+  const{l,c}=getTier(score);
+  $('tb').textContent=l;$('tb').style.color=$('tb').style.borderColor=c;
+
+  const DEFS=[
+    {lb:'СИММЕТРИЯ',k:'symmetry',u:'%'},{lb:'CANTHAL TILT',k:'canthal_tilt',tx:1},
+    {lb:'JAWLINE',k:'jawline',u:'%'},{lb:'СКУЛЫ',k:'cheekbones',u:'%'},
+    {lb:'ГЛАЗНОЙ РЕГИОН',k:'eye_region',u:'%'},{lb:'ПРОПОРЦИИ ЛИЦА',k:'facial_thirds',u:'%'},
+    {lb:'НОС',k:'nose',u:'%'},{lb:'ГУБЫ',k:'lips',u:'%'},
+  ];
+  const grid=$('mg');grid.innerHTML='';
+  DEFS.forEach(d=>{
+    const v=metrics[d.k],cell=document.createElement('div');cell.className='mc';
+    if(d.tx){cell.innerHTML=`<div class="ml">${d.lb}</div><div class="mv">${v}</div>`;}
+    else{const fc=v>=70?'gt':v>=50?'gd':'';cell.innerHTML=`<div class="ml">${d.lb}</div><div class="mv">${v}${d.u}</div><div class="mb"><div class="mf ${fc}" style="width:0%" data-p="${v}"></div></div>`;}
+    grid.appendChild(cell);
+  });
+  $('vt').innerHTML=verdict;
+  $('ll').innerHTML=tips.map(t=>`<li>${t}</li>`).join('');
+  const pot=parseFloat(clamp((100-(raw.jaw+raw.chk+raw.eye)/3)/40,0.5,3.0).toFixed(1));
+  $('pn').textContent='+'+pot.toFixed(1);
+  setTimeout(()=>{
+    document.querySelectorAll('.mf').forEach(el=>el.style.width=el.dataset.p+'%');
+    $('pf').style.width=Math.min(pot/3*100,100)+'%';
+  },300);
+}
+
+$('rb').addEventListener('click',()=>{
+  $('res-sec').style.display='none';
+  $('ov').getContext('2d').clearRect(0,0,9999,9999);
+  $('up-sec').style.display='block';
+  $('fi').value='';
+  resolveDetection=null;
+});
+
+// ── Boot ──────────────────────────────────────────────────────────
+window.addEventListener('load',()=>{
+  if(typeof FaceMesh==='undefined'){
+    $('st').textContent='SCRIPT ERR — обнови страницу';
+    return;
+  }
+  initMediaPipe();
+});
+</script>
+</body>
+</html>
