@@ -1,0 +1,825 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LOOKSCORE TERMINAL v2.0</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&display=swap');
+
+  :root {
+    --red: #c0392b;
+    --red-dim: #7b1e14;
+    --green: #00ff41;
+    --bg: #080808;
+    --surface: #0f0f0f;
+    --border: #1e1e1e;
+    --text: #d0d0d0;
+    --white: #f0f0f0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+    cursor: crosshair;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px);
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.8) 100%);
+    pointer-events: none;
+    z-index: 9998;
+  }
+
+  header {
+    border-bottom: 1px solid var(--red);
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    color: var(--white);
+    letter-spacing: 4px;
+  }
+
+  .logo span { color: var(--red); }
+
+  .status-bar {
+    font-size: 0.7rem;
+    color: #444;
+    text-align: right;
+    line-height: 1.6;
+  }
+
+  .status-bar .online { color: var(--green); }
+
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 60px 20px;
+  }
+
+  .sys-msg {
+    font-size: 0.75rem;
+    color: #333;
+    margin-bottom: 40px;
+    line-height: 1.8;
+  }
+
+  .sys-msg .cmd { color: var(--red); }
+
+  h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    letter-spacing: 3px;
+    color: var(--white);
+    margin-bottom: 20px;
+    border-left: 3px solid var(--red);
+    padding-left: 12px;
+  }
+
+  .upload-zone {
+    border: 1px solid #1e1e1e;
+    border-top: 1px solid var(--red-dim);
+    background: var(--surface);
+    padding: 60px 40px;
+    text-align: center;
+    position: relative;
+    transition: border-color 0.1s;
+    cursor: pointer;
+  }
+
+  .upload-zone:hover, .upload-zone.drag { border-color: var(--red); }
+
+  .upload-zone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .upload-icon {
+    font-size: 3rem;
+    color: #2a2a2a;
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  .upload-label {
+    font-size: 0.8rem;
+    color: #444;
+    line-height: 2;
+  }
+
+  .upload-label strong { color: var(--red); font-size: 1rem; letter-spacing: 2px; }
+
+  .warning-box {
+    margin-top: 30px;
+    border: 1px solid #1a1a1a;
+    border-left: 3px solid var(--red);
+    padding: 16px 20px;
+    font-size: 0.72rem;
+    color: #444;
+    line-height: 1.8;
+  }
+
+  .warning-box strong { color: var(--red); }
+
+  /* Preview + Analyze */
+  #preview-section { display: none; margin-top: 40px; }
+
+  .preview-wrap {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+  }
+
+  #preview-img {
+    width: 100%;
+    max-height: 420px;
+    object-fit: cover;
+    object-position: top;
+    display: block;
+    filter: grayscale(30%) contrast(1.1);
+  }
+
+  .scan-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 0%, rgba(192,57,43,0.05) 50%, transparent 100%);
+    animation: scan 2s linear infinite;
+    pointer-events: none;
+  }
+
+  @keyframes scan {
+    0% { background-position: 0 -100%; }
+    100% { background-position: 0 200%; }
+  }
+
+  .scan-line {
+    position: absolute;
+    left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--red), transparent);
+    animation: scanline 2s linear infinite;
+    pointer-events: none;
+  }
+
+  @keyframes scanline {
+    0% { top: 0; opacity: 1; }
+    100% { top: 100%; opacity: 0.3; }
+  }
+
+  .grid-overlay {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(192,57,43,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(192,57,43,0.06) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+
+  .corner { position: absolute; width: 16px; height: 16px; pointer-events: none; }
+  .corner.tl { top: 8px; left: 8px; border-top: 2px solid var(--red); border-left: 2px solid var(--red); }
+  .corner.tr { top: 8px; right: 8px; border-top: 2px solid var(--red); border-right: 2px solid var(--red); }
+  .corner.bl { bottom: 8px; left: 8px; border-bottom: 2px solid var(--red); border-left: 2px solid var(--red); }
+  .corner.br { bottom: 8px; right: 8px; border-bottom: 2px solid var(--red); border-right: 2px solid var(--red); }
+
+  #analyze-btn {
+    margin-top: 20px;
+    width: 100%;
+    padding: 18px;
+    background: transparent;
+    border: 1px solid var(--red);
+    color: var(--red);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    letter-spacing: 4px;
+    cursor: pointer;
+    transition: all 0.1s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #analyze-btn:hover {
+    background: var(--red);
+    color: #000;
+  }
+
+  #analyze-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* Loading */
+  #loading-section { display: none; margin-top: 40px; }
+
+  .terminal-log {
+    font-size: 0.75rem;
+    line-height: 2.2;
+    color: #333;
+  }
+
+  .terminal-log .line { opacity: 0; transition: opacity 0.3s; }
+  .terminal-log .line.show { opacity: 1; }
+  .terminal-log .line.green { color: var(--green); }
+  .terminal-log .line.red { color: var(--red); }
+  .terminal-log .line.white { color: #888; }
+
+  .progress-bar-wrap {
+    margin-top: 20px;
+    height: 2px;
+    background: #1a1a1a;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    height: 100%;
+    background: var(--red);
+    width: 0%;
+    transition: width 0.3s;
+    box-shadow: 0 0 8px var(--red);
+  }
+
+  /* Results */
+  #result-section { display: none; margin-top: 40px; }
+
+  .dossier-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 1px solid #1e1e1e;
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+  }
+
+  .dossier-title {
+    font-size: 0.7rem;
+    color: #333;
+    line-height: 2;
+  }
+
+  .dossier-title strong { color: #555; }
+
+  .score-display {
+    text-align: right;
+  }
+
+  .score-number {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 5rem;
+    line-height: 1;
+    color: var(--white);
+  }
+
+  .score-number.low { color: var(--red); }
+  .score-number.mid { color: #e67e22; }
+  .score-number.high { color: #f1c40f; }
+  .score-number.top { color: var(--green); }
+
+  .score-slash {
+    font-size: 2rem;
+    color: #333;
+    font-family: 'Bebas Neue', sans-serif;
+  }
+
+  .tier-badge {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.2rem;
+    letter-spacing: 3px;
+    padding: 4px 12px;
+    border: 1px solid;
+    display: inline-block;
+    margin-top: 8px;
+  }
+
+  /* Metrics grid */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: #111;
+    border: 1px solid #111;
+    margin-bottom: 30px;
+  }
+
+  .metric-cell {
+    background: var(--surface);
+    padding: 14px 16px;
+  }
+
+  .metric-label {
+    font-size: 0.65rem;
+    color: #333;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+  }
+
+  .metric-value {
+    font-size: 0.85rem;
+    color: var(--white);
+  }
+
+  .metric-bar {
+    height: 2px;
+    background: #1a1a1a;
+    margin-top: 8px;
+  }
+
+  .metric-bar-fill {
+    height: 100%;
+    background: var(--red);
+    transition: width 1s ease-out;
+  }
+
+  .metric-bar-fill.good { background: #f1c40f; }
+  .metric-bar-fill.great { background: var(--green); }
+
+  /* Verdict */
+  .verdict-block {
+    border: 1px solid #1a1a1a;
+    border-top: 1px solid var(--red);
+    padding: 24px;
+    margin-bottom: 20px;
+    background: var(--surface);
+  }
+
+  .verdict-block h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 3px;
+    color: var(--red);
+    margin-bottom: 16px;
+  }
+
+  .verdict-text {
+    font-size: 0.78rem;
+    line-height: 2;
+    color: #777;
+  }
+
+  .verdict-text strong { color: var(--white); }
+
+  .looksmax-list {
+    list-style: none;
+    margin-top: 16px;
+  }
+
+  .looksmax-list li {
+    font-size: 0.75rem;
+    line-height: 2;
+    color: #555;
+    padding-left: 16px;
+    position: relative;
+  }
+
+  .looksmax-list li::before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: var(--red);
+  }
+
+  .looksmax-list li strong { color: #aaa; }
+
+  .potential-wrap {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 20px;
+  }
+
+  .potential-label {
+    font-size: 0.7rem;
+    color: #333;
+    letter-spacing: 2px;
+    white-space: nowrap;
+  }
+
+  .potential-bar {
+    flex: 1;
+    height: 3px;
+    background: #111;
+    position: relative;
+  }
+
+  .potential-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--red), #f1c40f);
+    transition: width 1.5s ease-out;
+    box-shadow: 0 0 6px rgba(192,57,43,0.5);
+  }
+
+  .potential-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.2rem;
+    color: var(--white);
+    white-space: nowrap;
+  }
+
+  .reset-btn {
+    margin-top: 30px;
+    width: 100%;
+    padding: 14px;
+    background: transparent;
+    border: 1px solid #1e1e1e;
+    color: #333;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .reset-btn:hover { border-color: #444; color: #666; }
+
+  footer {
+    text-align: center;
+    padding: 40px;
+    font-size: 0.65rem;
+    color: #1e1e1e;
+    border-top: 1px solid #0f0f0f;
+    letter-spacing: 2px;
+    margin-top: 60px;
+  }
+
+  .blink { animation: blink 1s step-end infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  @media (max-width: 600px) {
+    header { padding: 16px 20px; }
+    .logo { font-size: 1.4rem; }
+    main { padding: 40px 16px; }
+    .metrics-grid { grid-template-columns: 1fr; }
+    .score-number { font-size: 3.5rem; }
+    .dossier-header { flex-direction: column; gap: 20px; }
+    .score-display { text-align: left; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">LOOKS<span>SCORE</span> TERMINAL</div>
+  <div class="status-bar">
+    VER 2.0.1 // AI-FACIAL-ANALYSIS<br>
+    STATUS: <span class="online">ONLINE</span><br>
+    <span id="ts"></span>
+  </div>
+</header>
+
+<main>
+  <div class="sys-msg">
+    <span class="cmd">&gt;&gt;</span> СИСТЕМА ИНИЦИАЛИЗИРОВАНА. ЗАГРУЗИ ФОТО ЛИЦА.<br>
+    <span class="cmd">&gt;&gt;</span> ОЦЕНКА ПРОИЗВОДИТСЯ ПО 14 МЕТРИКАМ ЛУКС-АНАЛИЗА.<br>
+    <span class="cmd">&gt;&gt;</span> БЕЗ ФИЛЬТРОВ. БЕЗ ЖАЛОСТИ. ТОЛЬКО ДАННЫЕ.<span class="blink">_</span>
+  </div>
+
+  <!-- Upload -->
+  <div id="upload-section">
+    <h2>// ЗАГРУЗКА ОБРАЗЦА</h2>
+    <div class="upload-zone" id="dropzone">
+      <input type="file" id="file-input" accept="image/*">
+      <span class="upload-icon">◉</span>
+      <div class="upload-label">
+        <strong>ПЕРЕТАЩИ ФОТО / НАЖМИ</strong><br>
+        фронтальное фото без фильтров<br>
+        хорошее освещение — точнее анализ<br>
+        <br>
+        <span style="color:#2a2a2a">JPG / PNG / WEBP — MAX 10MB</span>
+      </div>
+    </div>
+    <div class="warning-box">
+      <strong>// ВНИМАНИЕ:</strong> LOOKSCORE не хранит твои фото. Анализ происходит локально.<br>
+      Система оценивает ОБЪЕКТИВНЫЕ метрики: пропорции, симметрию, структуру. Не чувства.
+    </div>
+  </div>
+
+  <!-- Preview -->
+  <div id="preview-section">
+    <h2>// ОБРАЗЕЦ ПОЛУЧЕН</h2>
+    <div class="preview-wrap">
+      <img id="preview-img" src="" alt="preview">
+      <div class="scan-overlay"></div>
+      <div class="scan-line"></div>
+      <div class="grid-overlay"></div>
+      <div class="corner tl"></div>
+      <div class="corner tr"></div>
+      <div class="corner bl"></div>
+      <div class="corner br"></div>
+    </div>
+    <button id="analyze-btn">▶ ЗАПУСТИТЬ АНАЛИЗ</button>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading-section">
+    <h2>// АНАЛИЗ...</h2>
+    <div class="terminal-log" id="terminal-log"></div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div id="result-section">
+    <h2>// ВЕРДИКТ ВЫНЕСЕН</h2>
+
+    <div class="dossier-header">
+      <div class="dossier-title">
+        <strong>ID:</strong> <span id="res-id"></span><br>
+        <strong>ДАТА:</strong> <span id="res-date"></span><br>
+        <strong>ВЕРСИЯ:</strong> LOOKSCORE ENGINE 2.0<br>
+        <strong>СТАТУС:</strong> <span style="color:var(--red)">CLASSIFIED</span>
+      </div>
+      <div class="score-display">
+        <div>
+          <span class="score-number" id="score-num">0.0</span>
+          <span class="score-slash"> /10</span>
+        </div>
+        <div class="tier-badge" id="tier-badge"></div>
+      </div>
+    </div>
+
+    <div class="metrics-grid" id="metrics-grid"></div>
+
+    <div class="verdict-block">
+      <h3>// ПРЯМОЙ ВЕРДИКТ</h3>
+      <div class="verdict-text" id="verdict-text"></div>
+    </div>
+
+    <div class="verdict-block">
+      <h3>// LOOKSMAX ПРОТОКОЛ</h3>
+      <div class="verdict-text">
+        <span style="color:#444">На основе анализа — приоритетные области для улучшения SMV:</span>
+        <ul class="looksmax-list" id="looksmax-list"></ul>
+      </div>
+      <div class="potential-wrap">
+        <div class="potential-label">LOOKSMAX<br>POTENTIAL</div>
+        <div class="potential-bar">
+          <div class="potential-fill" id="potential-fill" style="width:0%"></div>
+        </div>
+        <div class="potential-num" id="potential-num">+0.0</div>
+      </div>
+    </div>
+
+    <button class="reset-btn" id="reset-btn">[ НОВЫЙ АНАЛИЗ ]</button>
+  </div>
+</main>
+
+<footer>
+  LOOKSCORE TERMINAL // ОБЪЕКТИВНЫЙ АНАЛИЗ // COPE IS NOT AN OPTION
+</footer>
+
+<script>
+// Timestamp
+const ts = document.getElementById('ts');
+function updateTs() {
+  const now = new Date();
+  ts.textContent = now.toISOString().replace('T',' ').slice(0,19);
+}
+updateTs();
+setInterval(updateTs, 1000);
+
+// Drag & drop
+const dropzone = document.getElementById('dropzone');
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
+dropzone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropzone.classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) handleFile(file);
+});
+
+document.getElementById('file-input').addEventListener('change', e => {
+  if (e.target.files[0]) handleFile(e.target.files[0]);
+});
+
+function handleFile(file) {
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById('preview-img').src = ev.target.result;
+    document.getElementById('upload-section').style.display = 'none';
+    document.getElementById('preview-section').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+document.getElementById('analyze-btn').addEventListener('click', () => {
+  document.getElementById('preview-section').style.display = 'none';
+  document.getElementById('loading-section').style.display = 'block';
+  runAnalysis();
+});
+
+// Fake analysis terminal sequence
+const terminalLines = [
+  { text: '> ИНИЦИАЛИЗАЦИЯ FACIAL MAPPING ENGINE...', cls: 'white', delay: 0 },
+  { text: '> ОПРЕДЕЛЕНИЕ ЛИЦЕВЫХ ОРИЕНТИРОВ (468 ТОЧЕК)...', cls: 'white', delay: 600 },
+  { text: '> АНАЛИЗ СИММЕТРИИ ЛИЦА...', cls: 'white', delay: 1200 },
+  { text: '> РАСЧЁТ CANTHAL TILT...', cls: 'white', delay: 1800 },
+  { text: '> JAWLINE DEFINITION SCORE...', cls: 'white', delay: 2400 },
+  { text: '> ОЦЕНКА ТРЕТЕЙ ЛИЦА (GOLDEN RATIO CHECK)...', cls: 'white', delay: 3000 },
+  { text: '> ORBITAL BONE PROMINENCE...', cls: 'white', delay: 3600 },
+  { text: '> CHEEKBONE WIDTH / BIZYGOMATIC...', cls: 'white', delay: 4200 },
+  { text: '> LIP RATIO ANALYSIS...', cls: 'white', delay: 4700 },
+  { text: '> SKIN TEXTURE SCORING...', cls: 'white', delay: 5100 },
+  { text: '> NOSE BRIDGE / TIP RATIO...', cls: 'white', delay: 5500 },
+  { text: '> FOREHEAD-TO-CHIN PROPORTION...', cls: 'white', delay: 5900 },
+  { text: '> HUNTER/PREY EYE CLASSIFICATION...', cls: 'white', delay: 6300 },
+  { text: '> COMPILING SMV SCORE...', cls: 'white', delay: 6800 },
+  { text: '> ВЫЧИСЛЕНИЕ LOOKSMAX POTENTIAL...', cls: 'white', delay: 7200 },
+  { text: '✓ АНАЛИЗ ЗАВЕРШЁН. ВЕРДИКТ ГОТОВ.', cls: 'red', delay: 7800 },
+];
+
+function runAnalysis() {
+  const log = document.getElementById('terminal-log');
+  const bar = document.getElementById('progress-bar');
+  log.innerHTML = '';
+
+  terminalLines.forEach((l, i) => {
+    const div = document.createElement('div');
+    div.className = 'line ' + l.cls;
+    div.textContent = l.text;
+    log.appendChild(div);
+    setTimeout(() => {
+      div.classList.add('show');
+      bar.style.width = ((i+1) / terminalLines.length * 100) + '%';
+    }, l.delay);
+  });
+
+  setTimeout(() => {
+    document.getElementById('loading-section').style.display = 'none';
+    showResults();
+  }, 8600);
+}
+
+// ---- Result generation ----
+function showResults() {
+  document.getElementById('result-section').style.display = 'block';
+
+  // Generate pseudo-random but believable score
+  const seed = Date.now();
+  const rng = (min, max) => min + ((seed * 9301 + 49297) % 233280) / 233280 * (max - min);
+
+  const baseScore = Math.round((rng(3.8, 8.4)) * 10) / 10;
+
+  // Metrics
+  const metrics = [
+    { label: 'СИММЕТРИЯ', value: rng(45, 95), unit: '%' },
+    { label: 'CANTHAL TILT', value: ['NEGATIVE', 'NEUTRAL', 'POSITIVE'][Math.floor(rng(0,3))], unit: '', noBar: true },
+    { label: 'JAWLINE', value: rng(30, 90), unit: '%' },
+    { label: 'СКУЛЫ', value: rng(35, 88), unit: '%' },
+    { label: 'ГЛАЗНОЙ РЕГИОН', value: rng(30, 92), unit: '%' },
+    { label: 'ПРОПОРЦИИ ЛИЦА', value: rng(40, 90), unit: '%' },
+    { label: 'НОС / ШИРИНА', value: rng(35, 85), unit: '%' },
+    { label: 'ГУБЫ RATIO', value: rng(30, 88), unit: '%' },
+  ];
+
+  // Tier
+  let tier, tierColor;
+  if (baseScore < 4) { tier = 'СУБЧЕЛОВЕК'; tierColor = '#7b1e14'; }
+  else if (baseScore < 5) { tier = 'НИЖЕ СРЕДНЕГО'; tierColor = '#c0392b'; }
+  else if (baseScore < 6) { tier = 'СРЕДНЯЧОК'; tierColor = '#e67e22'; }
+  else if (baseScore < 7) { tier = 'ВЫШЕ СРЕДНЕГО'; tierColor = '#f1c40f'; }
+  else if (baseScore < 8) { tier = 'HIGH TIER'; tierColor = '#27ae60'; }
+  else if (baseScore < 9) { tier = 'CHAD'; tierColor = '#00ff41'; }
+  else { tier = 'GIGACHAD'; tierColor = '#00ff41'; }
+
+  // Verdicts pool
+  const verdicts = {
+    low: [
+      `<strong>Структура лица слабая.</strong> Jawline отсутствует как концепция — жир или отсутствие костной базы делают лицо размытым. Canthal tilt негативный или нейтральный — взгляд не доминирующий. Это не приговор, но текущий уровень SMV находится в нижней зоне. <strong>Без изменений — ничего не изменится.</strong>`,
+      `<strong>Костная база слабая.</strong> Скулы не выражены, проекция подбородка недостаточна. Третьи лица несбалансированы. Ты не уродливый — ты просто застрял на уровне "NT-среднячка", который не привлекает внимание. <strong>Потенциал для изменений есть, но требует реальной работы.</strong>`,
+    ],
+    mid: [
+      `<strong>Средний уровень.</strong> Есть несколько сильных черт, которые тянут вверх, но слабые компенсируют. Jawline присутствует, но нечёткий. Симметрия в норме. Проблема: ты "невидимка" — не привлекаешь взгляды, но и не отталкиваешь. <strong>Средняков миллиарды. Это не позиция.</strong>`,
+      `<strong>5-6/10 — зона cope.</strong> Объективно нормальная внешность, которая не работает на тебя автоматически. Нет резких выраженных черт. Лицо "мягкое". SMV зависит от тела, стиля и социального статуса сильнее, чем у тех, кто выше или ниже. <strong>Лицо не спасёт, но тело и лукс-протокол поднимут реальный уровень.</strong>`,
+    ],
+    high: [
+      `<strong>Сильная внешность.</strong> Выраженная костная база, jawline читается, скулы дают теневой рельеф. Canthal tilt положительный — взгляд воспринимается как доминирующий. Ты входишь в меньшинство, которое привлекает взгляды без усилий. <strong>Дальнейший лукс-максинг переведёт тебя в элитный уровень.</strong>`,
+      `<strong>Высокий SMV-потенциал.</strong> Структура лица выше нормы. Есть несколько черт, которые объективно сильные. Слабые зоны тянут немного вниз, но общее впечатление — выраженное и запоминающееся. <strong>Ты в топ-20%. Следующий шаг — топ-5%.</strong>`,
+    ],
+    top: [
+      `<strong>Элитная внешность.</strong> Редкое сочетание — выраженная костная структура, высокий canthal tilt, идеальные пропорции лица. Генетический выигрыш. SMV на этом уровне работает на тебя 24/7. Это не повод останавливаться — <strong>это повод максировать тело и социальные навыки под уровень лица.</strong>`,
+    ]
+  };
+
+  let verdictText;
+  if (baseScore < 5) verdictText = verdicts.low[Math.floor(rng(0,2))];
+  else if (baseScore < 7) verdictText = verdicts.mid[Math.floor(rng(0,2))];
+  else if (baseScore < 8.5) verdictText = verdicts.high[Math.floor(rng(0,2))];
+  else verdictText = verdicts.top[0];
+
+  // Looksmax tips pool
+  const allTips = [
+    '<strong>MEWING 24/7</strong> — правильная осанка языка формирует небо и поднимает скулы за 1-3 года.',
+    '<strong>BODYFAT ↓</strong> — каждый потерянный кг жира на лице = +0.3 к воспринимаемому jawline.',
+    '<strong>ТРАПЕЦИИ И ШЕЯ</strong> — мощная шея делает jawline визуально более резким.',
+    '<strong>SKINCARE</strong> — стеклянная кожа поднимает субъективную оценку на 0.5-1 пункт.',
+    '<strong>БРОВИ</strong> — правильная форма усиливает орбитальный регион и взгляд.',
+    '<strong>СТРИЖКА ПОД СТРУКТУРУ</strong> — форма черепа определяет идеальный фасон.',
+    '<strong>ЖИМ СТОЯ + СТАНОВАЯ</strong> — дельты и трапеции создают V-frame, который компенсирует слабый jawline.',
+    '<strong>СОН 8+ ЧАСОВ</strong> — GH-пик ночью = меньше отёчности, лучше костная реконструкция.',
+    '<strong>ЧИСТАЯ ОДЕЖДА БЕЗ ПРИНТОВ</strong> — нейтральные тона переключают внимание на лицо, а не ткань.',
+    '<strong>ЗАГАР (НАТУРАЛЬНЫЙ)</strong> — выявляет рельеф скул и jawline, скрывает неоднородность кожи.',
+    '<strong>ЗУБЫ</strong> — белые выравненные зубы напрямую влияют на SMV при улыбке.',
+    '<strong>BEARD GAME</strong> — при слабом jawline борода закрывает дефицит и добавляет структуру.',
+  ];
+
+  // Pick 3-4 random unique tips
+  const shuffled = allTips.sort(() => rng(0,1) - 0.5);
+  const tips = shuffled.slice(0, 4);
+
+  // Potential
+  const potential = Math.round((Math.min(10, baseScore + rng(0.8, 2.4))) * 10) / 10;
+  const potentialGain = Math.round((potential - baseScore) * 10) / 10;
+
+  // Render
+  document.getElementById('res-id').textContent = 'LSC-' + Math.floor(rng(10000, 99999));
+  document.getElementById('res-date').textContent = new Date().toISOString().slice(0,10);
+
+  const scoreEl = document.getElementById('score-num');
+  scoreEl.textContent = baseScore.toFixed(1);
+  if (baseScore < 5) scoreEl.className = 'score-number low';
+  else if (baseScore < 6.5) scoreEl.className = 'score-number mid';
+  else if (baseScore < 8) scoreEl.className = 'score-number high';
+  else scoreEl.className = 'score-number top';
+
+  const badge = document.getElementById('tier-badge');
+  badge.textContent = tier;
+  badge.style.borderColor = tierColor;
+  badge.style.color = tierColor;
+
+  // Metrics grid
+  const grid = document.getElementById('metrics-grid');
+  grid.innerHTML = '';
+  metrics.forEach(m => {
+    const cell = document.createElement('div');
+    cell.className = 'metric-cell';
+    let barHtml = '';
+    let valStr = '';
+    if (!m.noBar) {
+      const pct = Math.round(m.value);
+      const fillCls = pct >= 70 ? 'great' : pct >= 50 ? 'good' : '';
+      valStr = pct + m.unit;
+      barHtml = `<div class="metric-bar"><div class="metric-bar-fill ${fillCls}" style="width:0%" data-pct="${pct}"></div></div>`;
+    } else {
+      valStr = m.value;
+    }
+    cell.innerHTML = `<div class="metric-label">${m.label}</div><div class="metric-value">${valStr}</div>${barHtml}`;
+    grid.appendChild(cell);
+  });
+
+  document.getElementById('verdict-text').innerHTML = verdictText;
+
+  const list = document.getElementById('looksmax-list');
+  list.innerHTML = tips.map(t => `<li>${t}</li>`).join('');
+
+  document.getElementById('result-section').style.display = 'block';
+
+  // Animate bars
+  setTimeout(() => {
+    document.querySelectorAll('.metric-bar-fill').forEach(el => {
+      el.style.width = el.dataset.pct + '%';
+    });
+    const pf = document.getElementById('potential-fill');
+    pf.style.width = (potentialGain / 3 * 100) + '%';
+    document.getElementById('potential-num').textContent = '+' + potentialGain.toFixed(1);
+  }, 300);
+}
+
+// Reset
+document.getElementById('reset-btn').addEventListener('click', () => {
+  document.getElementById('result-section').style.display = 'none';
+  document.getElementById('upload-section').style.display = 'block';
+  document.getElementById('file-input').value = '';
+});
+</script>
+</body>
+</html>
